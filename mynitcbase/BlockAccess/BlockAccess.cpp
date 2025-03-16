@@ -280,18 +280,18 @@ int BlockAccess::insert(int relId, Attribute *record) {
         
         RecBuffer recbuffer(blockNum);
         // create a RecBuffer object for blockNum (using appropriate constructor!)
-        HeadInfo head;
+        struct HeadInfo head;
         // get header of block(blockNum) using RecBuffer::getHeader() function
         recbuffer.getHeader(&head);
         // get slot map of block(blockNum) using RecBuffer::getSlotMap() function
-        unsigned char slotMap[head.numSlots];
-    recbuffer.getSlotMap(slotMap);
+        unsigned char slotMap2[head.numSlots];
+    recbuffer.getSlotMap(slotMap2);
         // search for free slot in the block 'blockNum' and store it's rec-id in rec_id
         // (Free slot can be found by iterating over the slot map of the block)
         /* slot map stores SLOT_UNOCCUPIED if slot is free and
            SLOT_OCCUPIED if slot is occupied) */
         for(int j=0;j<head.numSlots;j++){
-            if(slotMap[j]==SLOT_UNOCCUPIED){
+            if(slotMap2[j]==SLOT_UNOCCUPIED){
             	rec_id.block=blockNum;
             	rec_id.slot = j;
             	break;
@@ -349,7 +349,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
             numSlots: numOfSlots, numAttrs: numOfAttributes
             (use BlockBuffer::setHeader() function)
         */
-        HeadInfo blockheader;
+        struct HeadInfo blockheader;
         blockheader.pblock=-1;
         blockheader.rblock=-1;
         blockheader.lblock=prevBlockNum;
@@ -358,22 +358,23 @@ int BlockAccess::insert(int relId, Attribute *record) {
         blockheader.numEntries=0;
         blockheader.numSlots = relCatEntry.numSlotsPerBlk;
         blockBuffer.setHeader(&blockheader);
+        blockBuffer.getHeader(&blockheader);
         /*
             set block's slot map with all slots marked as free
             (i.e. store SLOT_UNOCCUPIED for all the entries)
             (use RecBuffer::setSlotMap() function)
         */
-        unsigned char slotMap[numOfSlots];
+        unsigned char slotMap1[numOfSlots];
     for (int k = 0; k < relCatEntry.numSlotsPerBlk; k++) {
-      slotMap[k] = SLOT_UNOCCUPIED;
+      slotMap1[k] = SLOT_UNOCCUPIED;
     }
-    blockBuffer.setSlotMap(slotMap);
+    blockBuffer.setSlotMap(slotMap1);
 
         // if prevBlockNum != -1
         if(prevBlockNum!=-1) 
         {
             RecBuffer prevBuffer(prevBlockNum);
-            HeadInfo prevhead;
+            struct HeadInfo prevhead;
             prevBuffer.getHeader(&prevhead);
             prevhead.rblock=rec_id.block;
             prevBuffer.setHeader(&prevhead);
@@ -413,7 +414,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
     // increment the numEntries field in the header of the block to
     // which record was inserted
     // (use BlockBuffer::getHeader() and BlockBuffer::setHeader() functions)
-    HeadInfo head;
+    struct HeadInfo head;
     blockBuffer.getHeader(&head);
     head.numEntries++;
     blockBuffer.setHeader(&head);

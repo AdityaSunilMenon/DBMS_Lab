@@ -352,9 +352,9 @@ int Algebra::project(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], int tar_
     /*** Creating and opening the target relation ***/
 
     // Create a relation for target relation by calling Schema::createRel()
-    int ret=Schema::createRel(targetRel,tar_nAttrs,tar_Attrs,attrTypes);
-    if(ret!=SUCCESS)
-    	return ret;
+    int ret2=Schema::createRel(targetRel,tar_nAttrs,tar_Attrs,attrTypes);
+    if(ret2!=SUCCESS)
+    	return ret2;
     // if the createRel returns an error code, then return that value.
     int targetrelid=OpenRelTable::openRel(targetRel);
     // Open the newly created target relation by calling OpenRelTable::openRel()

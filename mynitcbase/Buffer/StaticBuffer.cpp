@@ -1,4 +1,6 @@
 #include "StaticBuffer.h"
+#include <string.h>
+#include <stdio.h>
 
 unsigned char StaticBuffer::blocks[BUFFER_CAPACITY][BLOCK_SIZE];
 struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
@@ -8,13 +10,15 @@ StaticBuffer::StaticBuffer() {
   // copy blockAllocMap blocks from disk to buffer (using readblock() of disk)
   // blocks 0 to 3
   int blockmapslot=0;
+  unsigned char buffer[BLOCK_SIZE];
   for(int i=0;i<4;i++)
   {
-	unsigned char buffer[BLOCK_SIZE];
+	//unsigned char buffer[BLOCK_SIZE];
 	Disk::readBlock(buffer, i);
-	for (int slot = 0; slot < BLOCK_SIZE; slot++, blockmapslot++) {
+	/*for (int slot = 0; slot < BLOCK_SIZE; slot++, blockmapslot++) {
             StaticBuffer::blockAllocMap[blockmapslot] = buffer[slot];
-        }
+        }*/
+        memcpy(blockAllocMap + i * BLOCK_SIZE,buffer,BLOCK_SIZE);
   }
   // initialise all blocks as free
   for (int bufferIndex=0;bufferIndex<BUFFER_CAPACITY;bufferIndex++) {
@@ -32,13 +36,14 @@ StaticBuffer::~StaticBuffer() {
   {
 	unsigned char buffer[BLOCK_SIZE];
 	for (int slot = 0; slot < BLOCK_SIZE; slot++, blockmapslot++) {
-            buffer[slot] = blockAllocMap[blockmapslot];
+            //buffer[slot] = blockAllocMap[blockmapslot];
+            Disk::writeBlock(blockAllocMap + slot * BLOCK_SIZE,slot);
         }
-        Disk::writeBlock(buffer, i);
+        //Disk::writeBlock(buffer, i);
   }
   for (int bufferIndex=0;bufferIndex<BUFFER_CAPACITY;bufferIndex++) {
     if(metainfo[bufferIndex].free==false && metainfo[bufferIndex].dirty==true){
-      Disk::writeBlock(blocks[bufferIndex],metainfo[bufferIndex].blockNum);
+      Disk::writeBlock(StaticBuffer::blocks[bufferIndex],metainfo[bufferIndex].blockNum);
      }
   }
 
@@ -49,7 +54,7 @@ int StaticBuffer::getFreeBuffer(int blockNum) {
     return E_OUTOFBOUND;
   }
   int bufferNum=-1;
-  int timestamp=0;
+  int timestamp=-1;
   int maxindex=0;
   for(int bufferIndex=0;bufferIndex<BUFFER_CAPACITY;bufferIndex++){
     if(metainfo[bufferIndex].free==false){
@@ -70,7 +75,7 @@ int StaticBuffer::getFreeBuffer(int blockNum) {
    }
    if(bufferNum==-1){
     if(metainfo[maxindex].dirty==true){
-      Disk::writeBlock(blocks[maxindex],metainfo[maxindex].blockNum);
+      Disk::writeBlock(StaticBuffer::blocks[maxindex],metainfo[maxindex].blockNum);
       bufferNum=maxindex;
     }
   }

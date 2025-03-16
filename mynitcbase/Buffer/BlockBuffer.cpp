@@ -13,12 +13,12 @@ BlockBuffer::BlockBuffer(char blocktype){
     // allocate a block on the disk and a buffer in memory to hold the new block of
     //int blockType = blocktype == 'R' ? REC : UNUSED_BLK; 
     // given type using getFreeBlock function and get the return error codes if any.
-    int blockNum = getFreeBlock(blockType);
-    if(blockNum<0 || blockNum>DISK_BLOCKS){
+    int blockNum = getFreeBlock(blocktype);
+    /*if(blockNum<0 || blockNum>DISK_BLOCKS){
     	std::cout << E_OUTOFBOUND;
     	this->blockNum=E_OUTOFBOUND;
     	return;
-    }
+    }*/
     this->blockNum=blockNum;
     	
     // set the blockNum field of the object to that of the allocated block
@@ -78,10 +78,10 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum) {
   */
   int recordSize = attrCount * ATTR_SIZE;
   int offset = HEADER_SIZE + slotCount + (recordSize * slotNum);
-  unsigned char *slotPointer = bufferPtr + offset/* calculate buffer + offset */;
+  //unsigned char *slotPointer = bufferPtr + offset/* calculate buffer + offset */;
 
   // load the record into the rec data structure
-  memcpy(rec, slotPointer, recordSize);
+  memcpy(rec, bufferPtr + offset, recordSize);
 
   return SUCCESS;
 }
@@ -92,7 +92,7 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
     if(ret!=SUCCESS){
     	return ret;
     }
-    HeadInfo head;
+    struct HeadInfo head;
 
     this->getHeader(&head);
 
@@ -144,6 +144,7 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr){
 
   if (bufferNum != E_BLOCKNOTINBUFFER) {
     for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++) {
+    if(StaticBuffer::metainfo[bufferIndex].free==false)
       StaticBuffer::metainfo[bufferIndex].timeStamp++;
     }
     StaticBuffer::metainfo[bufferNum].timeStamp = 0;
